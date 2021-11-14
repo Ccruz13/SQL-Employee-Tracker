@@ -4,7 +4,7 @@ const console = require("console.table");
 
 const connection = mysql.createConnection({
     host: "localhost",
-    port: 3001,
+    port: 3306,
     user: "root",
     password: "",
     database: "employee_tracker"
@@ -17,6 +17,7 @@ connection.connect(function (err) {
     promptUser();
 });
 
+// first prompt of program
 const promptUser = () => {
     return inquirer.prompt ([
         {
@@ -49,7 +50,7 @@ const promptUser = () => {
             return addRole();
         } else if (choices === "Add an Employee") {
             return addEmployee();
-        } else (choices === "Update Employee role") {
+        } else if (choices === "Update Employee role") {
             return updateEmployeeRole();
         }
     });
@@ -61,6 +62,37 @@ const viewAllDepartments = () => {
     connection.promise().query(sql, (err, res) => {
         if (err) throw (err);
         console.table(res);
-        promptUser;
+        promptUser();
+    });
+};
+
+//View all roles
+const viewAllRoles = () => {
+    const sql = `SELECT role.id, role.title, role.salary, department.department_name AS department FROM role
+                INNER JOIN department ON role.department_id = department.id`;
+    connection.promise().query(sql, (err, res) => {
+        if (err) throw (err);
+        response.forEach((role) => {
+            console.log(role.title);
+        });
+        promptUser();
+    });
+};
+
+//View all employees
+const viewAllEmployees = () => {
+    const sql = `SELECT employee.id,
+                 employee.first_name,
+                 employee.last_name,
+                 role.title,
+                 role.salary,
+                 department.department_name
+                 FROM employee, role, department
+                 WHERE department.id = role.department_id
+                 AND role.id = employee.role_id
+                 `;
+    connection.promise().query(sql, (err, res) => {
+        if (err) throw (err);
+        console.table(res);
     });
 };
