@@ -102,6 +102,7 @@ const viewAllEmployees = () => {
     });
 };
 
+// add a department
 const addDepartment = () => {
     return inquirer.prompt([
         {
@@ -124,10 +125,13 @@ const addDepartment = () => {
                 if (err) throw (err);
                 console.log(answer.newDepartment + `department has been created!`);
                 viewAllDepartments();
+
+                promptUser();
             });
         });
 };
 
+// add a role
 const addRole = () => {
     const sql = 'SELECT * FROM department'
     connection.query(sql, (err, res) => {
@@ -195,12 +199,15 @@ const addRole = () => {
                         if (err) throw (err);
                         console.log('Role created');
                         viewAllRoles();
+
+                        promptUser();
                     });
                 });
         };
     });
 };
 
+// add an employee
 const addEmployee = () => {
     return inquirer.prompt([
         {
@@ -262,16 +269,62 @@ const addEmployee = () => {
                     .then(managerChoice => {
                         const manager = managerChoice.manager;
                         crit.push(manager);
-                        const sql = `INSERT INTO employee (frist_name, last_name, role_id, manager_id)
+                        const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
                                     VALUES (?, ?, ?, ?)`;
                         connection.query(sql, crit, (err) => {
                             if (err) throw (err);
                             console.log("Employee has been added.")
                             viewAllEmployees();
+
+                            promptUser();
                         });
                     });
                 });
             });
+        });
+    });
+};
+
+//update an employee
+const updateEmployeeRole = () => {
+    let sql = `SELECT employee.id, employee.first_name, employee.last_name, employee.manager_id FROM employee`;
+    connection.query(sql, (err, res) => {
+        let employeeNamesArray = [];
+        res.forEach((employee) => {
+            employeeNamesArray.push(`${employee.first_name} ${employee.last_name}`);
+        });
+
+        inquirer.prompt([
+            {
+                type: 'list',
+                name: 'chooseEmployee',
+                message: "Which employee has a new manager?",
+                choices: employeeNamesArray
+            },
+            {
+                type: 'list',
+                name: 'newManager',
+                message: "Who is their manager?",
+                choices: employeeNamesArray
+            }
+        ])
+        .then((answer) => {
+            let employeeId;
+            let managerId;
+            res.forEach((employee) => {
+                if (answer.chooseEmployee === `${employee.first_name} ${employee.last_name}`) {
+                    return employeeId = employee.id;
+                } else if (answer.newManager === `${employee.first_name} ${employee.last_name}`) {
+                    return managerId = employee.id;
+                }
+            });
+            let sql = `UPDATE employee SET employee.manager_id = ? WHERE employee.id = ?`;
+
+            connection.query(sql, [managerId, employeeId], (err) => {
+                if (err) throw (err);
+                console.log('Employee manager updated.')
+                promptUser();
+            })
         });
     });
 };
